@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import RowMapping, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,12 +14,13 @@ class FlagsRepository:
         result = await self._session.execute(
             text("""
                 INSERT INTO flags
-                    (key, name, is_active)
+                    (id, key, name, is_active)
                 VALUES
-                    (:key, :name, :is_active)   
-                RETURNING id   
+                    (:id, :key, :name, :is_active)
+                RETURNING id
             """),
             {
+                "id": str(uuid4()),
                 "key": data.key,
                 "name": data.name,
                 "is_active": data.is_active,
@@ -43,11 +44,12 @@ class FlagsRepository:
     async def patch_is_active(self, key: str, is_active: bool) -> None:
         await self._session.execute(
             text("""
-                UPDATE flags (id, is_active)
-                VALUES (:id, :is_active)
+                UPDATE flags
+                SET is_active = :is_active
+                WHERE key = :key
             """),
             {
-                "id": str(id),
+                "key": key,
                 "is_active": is_active,
             },
         )

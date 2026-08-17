@@ -9,6 +9,8 @@ from flags.misc.db.engine import instance_db_engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.db_engine = instance_db_engine()
+    yield
+    await app.state.db_engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)

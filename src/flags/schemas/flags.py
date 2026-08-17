@@ -1,7 +1,7 @@
 import re
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class CreateFlagRequest(BaseModel):
@@ -10,13 +10,13 @@ class CreateFlagRequest(BaseModel):
     is_active: bool = Field(True)
 
     @field_validator("key", mode="after")
-    def validate_key_format(self, key: str) -> "CreateFlagRequest":
-        match = re.match(r"[a-z\-]{3,}", key)
-        if len(key) != len(match.string):
-            raise ValidationError(
-                "String must be at least 3 characters long and only contain lowercase letters or hyphens"
+    @classmethod
+    def validate_key_format(cls, key: str) -> str:
+        if not re.fullmatch(r"[a-z\-]{3,}", key):
+            raise ValueError(
+                "key must be at least 3 characters long and contain only lowercase letters or hyphens"
             )
-        return self
+        return key
 
 
 class GetFlagResponse(BaseModel):

@@ -1,18 +1,14 @@
 from typing import Annotated
 
-from fastapi import Request
-from sqlalchemy.ext.asyncio import AsyncEngine
-from loguru import logger
+from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 
 async def get_db_session(request: Request):
     engine: AsyncEngine = request.app.state.db_engine
 
-    try:
-        async with engine.begin() as session:
-            yield session
-    except Exception as e:
-        logger.error(e)
+    async with engine.begin() as connection:
+        yield connection
 
 
-DBSessionDep = Annotated[AsyncEngine, get_db_session()]
+DBSessionDep = Annotated[AsyncConnection, Depends(get_db_session)]
