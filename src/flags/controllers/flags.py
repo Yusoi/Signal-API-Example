@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 from loguru import logger
 
 from flags.deps.db import DBSessionDep
+from flags.exceptions.flags import FlagNotFoundException
 from flags.schemas.flags import CreateFlagRequest, GetFlagResponse
 from flags.services.flags import FlagsService
 
@@ -41,6 +42,22 @@ async def patch_flag(
         result = await FlagsService(session).patch_is_active(key, is_active)
     except Exception as e:
         logger.error(f"Error while patching flag {e}")
+        raise e
+
+
+@router.get("/{key}/users/{user_id}")
+async def get_user_access_by_key(
+    session: DBSessionDep, key: str, user_id: UUID
+) -> bool:
+    try:
+        return await FlagsService(session).get_user_access_by_key(
+            key,
+            user_id,
+        )
+    except FlagNotFoundException as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error while getting flag access by user {e}")
         raise e
 
 
